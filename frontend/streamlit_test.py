@@ -71,9 +71,14 @@ with tab1:
                         response.raise_for_status()  # Raise an error for bad status codes
                         
                         # Parse the response from the backend
-                        analysis_result = response.text
+                        analysis_result = response.json()
 
-                         # Display the result in the UI
+                        # If the response is a JSON string, ensure it's parsed correctly
+                        if isinstance(analysis_result, str):
+                            # Replace escaped newlines with actual newlines
+                            analysis_result = analysis_result.replace("\\n", "\n")
+
+                        # Display the result in the UI
                         st.success("Idea analyzed successfully!")
                         st.markdown(analysis_result, unsafe_allow_html=True)
 

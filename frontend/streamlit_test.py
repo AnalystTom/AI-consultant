@@ -35,17 +35,22 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 
 # Tab 1: Idea Generation
 with tab1:
-    st.header("💡 AI Project Idea Generation")
+    st.header("💡 Desribe your next project")
     st.markdown("""
-    Let's start by understanding your business needs and generating potential AI solutions.
+    Let's start by understanding your business needs.
     """)
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        industry = st.selectbox(
+        
+        project_idea = st.text_area(
+            "What is your project idea?",
+            help="Define a type of product you would like to build eg. chatbot, predictive algorthm, etc"
+        )
+        industry = st.text_area(
             "What industry are you in?",
-            ["Select Industry", "Healthcare", "Finance", "Retail", "Manufacturing", "Technology", "Other"]
+            help="Eg. Automotive, Marketing, Sales"
         )
         
         problem_area = st.text_area(
@@ -53,21 +58,37 @@ with tab1:
             help="Be as specific as possible about the challenges you're facing."
         )
         
+        # TODO - Ensure it follows the url structure
+        website_url = st.text_area(
+            "Provide your website url",
+            help="What is the website of the business?"
+        )
+        # Add an option for user to get competitor analysis (tickbox?)
+        
+        mvp = st.text_area(
+            "What is the minimum viable product?",
+            help="Define the minimum requirement for this project to succeed"
+        )
+        
+        # SHALL WE FORWARD THE USER TO NEXT PAGE?
         if st.button("Analyze my idea"):
             with st.spinner("Analyzing your idea, existing solutions, and current pain points..."):
                 # Check that valid data is provided
-                if industry == "Select Industry" or not problem_area.strip():
-                    st.error("Please select a valid industry and provide a problem description.")
-                else:
+                # if problem_area.strip():
+                #     st.error("Please select a valid industry and provide a problem description.")
+                # else:
                     # Prepare the data to send to the backend
                     data = {
                         "domain": industry,
-                        "problem": problem_area
+                        "problem": problem_area,
+                        "website": website_url,
+                        "mvp": mvp,
+                        "problem_area" :problem_area
                     }
 
                     try:
                         # Send a request to the FastAPI backend
-                        response = requests.post("http://localhost:8000/analyze", json=data)
+                        response = requests.post("http://localhost:8000/prompt_to_json", json=data)
                         response.raise_for_status()  # Raise an error for bad status codes
                         
                         # Parse the response from the backend
@@ -79,7 +100,7 @@ with tab1:
                             analysis_result = analysis_result.replace("\\n", "\n")
 
                         # Display the result in the UI
-                        st.success("Idea analyzed successfully!")
+                        st.success("JSON built succesfully!")
                         st.markdown(analysis_result, unsafe_allow_html=True)
 
                     except requests.exceptions.RequestException as e:
@@ -92,32 +113,14 @@ with tab1:
         - Include current pain points
         - Mention any existing solutions
         - Describe desired outcomes
+        - Consider using tools such as NotebookLM to answer your questions on youtube videos, web links and pdf files for further research
         """)
 
 # Tab 2: Requirements Gathering
 with tab2:
-    st.header("📋 Requirements Gathering")
+    st.header("📋 Project Brief")
     
-    project_name = st.text_input("Project Name", key="project_name")
-    
-    st.subheader("Business Requirements")
-    business_objective = st.text_area("What is the main business objective?")
-    target_users = st.text_input("Who are the target users?")
-    success_metrics = st.text_area("How will success be measured?")
-    
-    st.subheader("Technical Requirements")
-    data_sources = st.multiselect(
-        "What data sources will be needed?",
-        ["Internal Databases", "External APIs", "User Input", "Sensors", "Documents", "Images", "Other"]
-    )
-    
-    integration_needs = st.multiselect(
-        "Required system integrations:",
-        ["CRM", "ERP", "Legacy Systems", "Cloud Services", "APIs", "Other"]
-    )
-    
-    if st.button("Save Requirements"):
-        st.success("Requirements saved successfully!")
+    # PROJECT BRIEF CODE GOES HERE
 
 # Tab 3: Diagram Generation
 with tab3:
@@ -208,10 +211,14 @@ with tab5:
 
 # Sidebar for navigation and settings
 with st.sidebar:
-    st.title("🤖 AI Requirements Analyst")
+    st.title("🤖 Your project name: XXX")
     st.markdown("---")
     
-    st.subheader("Project Progress")
+    st.subheader("Project Progress: ")
+    st.subheader("1. Fill the info: ")
+    st.subheader("2. View project brief: ")
+    st.subheader("3. View your step by step guide: ")
+    st.subheader("4. Research tools required: ")
     progress = st.progress(0)
     
     # Update progress based on completed sections

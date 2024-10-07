@@ -161,6 +161,73 @@ async def prompt_to_json(request: AnalysisRequest):
         logging.error(f"Error occurred while getting response from API: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# GO THORUGH WEBSITE AND RESEARCH COMPETITION
+@app.post("/competition-research")
+async def complete_analysis(request: AnalysisRequest):
+    """
+    Endpoint to generate a structured JSON response based on the given domain and problem.
+    """
+    try:
+        # Simplified prompt
+        user_prompt = f"""
+        
+        - Website: {request.website}
+        
+        - browse the website
+        - find similar websites
+        - extract information on competition's relevant products
+        
+        
+        Output:
+        1. Business A
+        1.1 Product A
+        1.2 Features
+        1.3 Potential improvemnts
+        """
+
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "user", "content": user_prompt},
+            ],
+            max_tokens=500,
+            temperature=0.7
+        )
+
+        if response and response.choices:
+            message = response.choices[0].message.content
+            try:
+                structured_response = json.loads(message)
+                
+                # Create a concise website overview
+                website_overview = (
+                    f"A {structured_response.get('industry', 'N/A')} business developing "
+                    f"{structured_response.get('product', 'N/A')}. "
+                    f"MVP: {structured_response.get('minimum_viable_product', 'N/A')}. "
+                    f"Impact: {structured_response.get('business_impact', 'N/A')}."
+                )
+                
+                return {
+                    "json_analysis": structured_response,
+                    "website_overview": website_overview.strip()
+                }
+                
+            except json.JSONDecodeError as e:
+                logging.error(f"JSON parsing error: {e}\nResponse content: {message}")
+                return {
+                    "error": "Invalid JSON response from the API.",
+                    "raw_response": message
+                }
+        else:
+            return {"error": "No response received from the API."}
+    except Exception as e:
+        logging.error(f"Error occurred while getting response from API: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
+    
+
 @app.post("/complete_analysis")
 async def complete_analysis(request: AnalysisRequest):
     """

@@ -62,6 +62,9 @@ To start the FastAPI backend, run the following command
 
 ```bash
 uvicorn backend:idea_analysis --host 0.0.0.0 --port 8000 --reload
+
+This has worked for me:
+uvicorn backend.idea_analysis:app --host 0.0.0.0 --port 8000 --reload 
 ```
 
 ## Step 4: Running the Streamlit Frontend

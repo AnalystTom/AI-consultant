@@ -213,6 +213,8 @@ if 'analysis_result' not in st.session_state:
     st.session_state.analysis_result = None
 if 'product_brief' not in st.session_state:
     st.session_state.product_brief = None
+if 'mermaid_flowchart' not in st.session_state:
+    st.session_state.mermaid_flowchart = ""
 
 # Create tabs
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -293,29 +295,50 @@ with tab1:
                         "domain": st.session_state.industry,
                         "problem": st.session_state.problem_area,
                         "website": st.session_state.website_url,
-                        "mvp": st.session_state.mvp,
-                        "problem_area": st.session_state.problem_area
+                        "mvp": st.session_state.mvp
                     }
 
                     try:
                         response = requests.post(
                             "http://localhost:8000/complete_analysis", 
                             json=data,
-                            timeout=30
+                            timeout=60
                         )
                         
                         result = handle_api_response(response)
                         if result:
+                            print("product brief generated")
                             st.session_state.analysis_result = result.get('analysis', {})
                             st.session_state.product_brief = result.get('product_brief', {})
+                            
+                            # # Trigger swim lane diagram generation
+                            # swimlane_data = {
+                            #     "product_brief": st.session_state.product_brief,
+                            #     "section": "problem_statement"  # Specify the section you want to visualize
+                            # }
+                            
+                            # swimlane_response = requests.post(
+                            #     "http://localhost:8000/generate_swimlane",
+                            #     json=swimlane_data,
+                            #     timeout=30
+                            # )
+                            
+                            # swimlane_result = handle_api_response(swimlane_response)
+                            # if swimlane_result and "mermaid_flowchart" in swimlane_result:
+                            #     st.session_state.mermaid_flowchart = swimlane_result["mermaid_flowchart"]
+                            #     st.success("Swim lane diagram generated successfully! Switch to the 'Diagram Generation' tab to view it.")
+                            #     tab3.select()
+                            # else:
+                            #     st.error("Failed to generate swim lane diagram.")
+                            
                             # Update the requirements state
                             st.session_state.requirements.update({
                                 'project_name': st.session_state.project_idea,
                                 'industry': st.session_state.industry,
                                 'problem_statement': st.session_state.problem_area
                             })
+                            
                             st.success("Product brief generated successfully! Switch to the 'Project Brief' tab to view it.")
-                            tab2.select()
                     except Exception as e:
                         st.error(f"An unexpected error occurred: {str(e)}")
 
@@ -354,7 +377,22 @@ with tab2:
 # Tab 3: Diagram Generation
 with tab3:
     st.header("📊 Diagram Generation")
-    # Your existing code for Diagram Generation
+    
+    if st.session_state.mermaid_flowchart:
+        st.markdown("## Swim Lane Flowchart")
+        
+        # Render Mermaid diagram using Streamlit's native support
+        mermaid_code = st.session_state.mermaid_flowchart
+        
+        st.markdown(f"""
+        ```mermaid
+        {mermaid_code}
+        ```
+        """, unsafe_allow_html=True)
+        
+        st.info("If the diagram is not rendering correctly, ensure that you are using the latest version of Streamlit.")
+    else:
+        st.info("Swim lane diagram will be generated after generating the product brief in the Idea Generation tab.")
 
 # Tab 4: AI Feasibility Analysis
 with tab4:
@@ -414,8 +452,9 @@ with st.sidebar:
     progress_items = [
         ("1. Fill your product information", has_project_idea and has_industry and has_problem),
         ("2. View project brief", has_brief),
-        ("3. Research tools required", has_analysis),
-        ("4. View your step by step guide", has_diagrams)
+        ("3. Generate Swim Lane Diagram", bool(st.session_state.mermaid_flowchart)),
+        ("4. Research tools required", has_analysis),
+        ("5. View your step by step guide", has_diagrams)
     ]
     
     for label, is_complete in progress_items:
@@ -429,6 +468,3 @@ with st.sidebar:
     completed_steps = sum(is_complete for _, is_complete in progress_items)
     progress_percentage = completed_steps / total_steps if total_steps else 0
     st.progress(progress_percentage)
-    
-
-    

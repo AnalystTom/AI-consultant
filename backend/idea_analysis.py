@@ -74,7 +74,8 @@ async def generate_product_brief(request: ProductBriefRequest):
             messages=[
                 {"role": "user", "content": user_prompt},
             ],
-            max_tokens=2000
+            max_tokens=2000,
+            temperature=0.7
         )
 
         if response and response.choices:
@@ -193,7 +194,7 @@ async def generate_tech_stack(request: ProductBriefRequest):
             messages=[
                 {"role": "user", "content": user_prompt},
             ],
-            max_tokens=5000,
+            max_tokens=2500,
             temperature=0.5
         )
 
@@ -302,6 +303,115 @@ async def complete_analysis(request: AnalysisRequest):
     except Exception as e:
         logging.error(f"Error occurred in complete analysis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+### aginerd code starts form here ###
+# Define the AnalysisRequest model
+class AnalysisRequest(BaseModel):
+    website: str
+
+# Step 1: Use GPT-4.0 with browsing to gather competitor information
+async def browse_for_competitors(website: str):
+    try:
+        user_prompt = f"""
+        - Website: {website}
+        Task:
+        1. Search for competitor websites using internet search.
+        2. Collect product and business details of competitors relevant to {website}.
+        
+        Output: Provide a list of competitor names, products, and brief descriptions.
+        """
+        
+        # Use GPT-4.0 with browsing for searching competitors
+        response = client.chat.completions.create(
+            model="gpt-4",  # The version that has browsing capability
+            messages=[
+                {"role": "user", "content": user_prompt},
+            ],
+            max_tokens=700,
+            temperature=0.7
+        )
+
+        if response and response.choices:
+            search_results = response.choices[0].message['content']
+            return search_results  # Raw data for further analysis
+
+        return None
+    except Exception as e:
+        logging.error(f"Error in browsing: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Step 2: Use GPT-4.01 to analyze competitor data and suggest improvements
+async def analyze_competitor_data(competitor_data: str):
+    try:
+        user_prompt = f"""
+        Task:
+        1. Analyze the following competitor data.
+        2. Extract product information, key features, and any potential improvements.
+        3. Identify gaps in the market based on the given data.
+        
+        Competitor Data:
+        {competitor_data}
+
+        Output:
+        1. Competitor Name A
+        1.1 Product A
+        1.2 Features
+        1.3 Potential improvements
+        1.4 Market Gaps
+        """
+
+        # Use GPT-4.01 to analyze the competitor data
+        
+        response = client.chat.completions.create(
+            model="gpt-4-turbo-16k",  # The reasoning model for structured analysis
+            messages=[
+                {"role": "user", "content": user_prompt},
+            ],
+            max_tokens=1000,
+            temperature=0.7
+        )
+
+        if response and response.choices:
+            analysis_result = response.choices[0].message['content']
+            return analysis_result
+
+        return None
+    except Exception as e:
+        logging.error(f"Error in analysis: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Main Endpoint that coordinates both steps
+@app.post("/competition-research")
+async def complete_analysis(request: AnalysisRequest):
+    """
+    Step 1: Perform internet search to find competitors and products using GPT-4.0
+    Step 2: Pass the search results to GPT-4.01 for structured analysis
+    """
+    try:
+        # Step 1: Use GPT-4.0 with browsing to search for competitors
+        competitor_data = await browse_for_competitors(request.website)
+        
+        if not competitor_data:
+            return {"error": "Failed to gather competitor information."}
+
+        # Step 2: Pass the gathered data to GPT-4.01 for deeper analysis
+        analysis = await analyze_competitor_data(competitor_data)
+
+        if not analysis:
+            return {"error": "Failed to analyze competitor data."}
+
+        return {
+            "competitor_data": competitor_data,
+            "analysis": analysis
+        }
+
+    except Exception as e:
+        logging.error(f"Error in complete analysis: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+### aginerd code ends here ###
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

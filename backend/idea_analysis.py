@@ -74,7 +74,7 @@ async def generate_product_brief(request: ProductBriefRequest):
             messages=[
                 {"role": "user", "content": user_prompt},
             ],
-            max_tokens=2000,
+            max_tokens=6000,
             temperature=0.7
         )
 
@@ -195,7 +195,7 @@ async def generate_tech_stack(request: ProductBriefRequest):
                 {"role": "user", "content": user_prompt},
             ],
             max_tokens=2500,
-            temperature=0.5
+            temperature=0.7
         )
 
         if response and response.choices:
@@ -227,10 +227,10 @@ async def generate_tech_stack(request: ProductBriefRequest):
 
 
 
-@app.post("/generate_market_competitor_analysis")
+@app.post("/generate_market_analysis")
 async def generate_market_competitor_analysis(request: ProductBriefRequest):
     """
-    Endpoint to generate a market and competitor analysis.
+    Endpoint to generate a market analysis.
     """
     try:
         user_prompt = f"""
@@ -312,7 +312,7 @@ async def complete_analysis(request: AnalysisRequest):
 
 
 # Step 1: Search for competitors based on URL or project idea using GPT-4.0 (with browsing)
-async def search_for_competitors(url: str, project_idea: str):
+async def search_for_competitors(url: str, project_idea: str, domain:str, mvp: str):
     try:
         if url:
             # Focus search on competitors of the given website
@@ -332,7 +332,7 @@ async def search_for_competitors(url: str, project_idea: str):
             user_prompt = f"""
             - Project Idea: {project_idea}
             Task:
-            1. Search the web for top 5 competitors in the field of {project_idea}.
+            1. Search the web for top 5 competitors in the field of {project_idea} in {domain} with minimum viable product {mvp}.
             2. Provide a list of the top 5 competitors and their products.
             
             Output:
@@ -352,7 +352,8 @@ async def search_for_competitors(url: str, project_idea: str):
         )
 
         if response and response.choices:
-            search_results = response.choices[0].message['content']
+            search_results = response.choices[0].message.content
+            print(search_results)
             return search_results  # Raw competitor data for further analysis
 
         return None
@@ -392,7 +393,7 @@ async def analyze_competitor_products(competitor_data: str):
         )
 
         if response and response.choices:
-            analysis_result = response.choices[0].message['content']
+            analysis_result = response.choices[0].message.content
             return analysis_result
 
         return None
@@ -401,15 +402,16 @@ async def analyze_competitor_products(competitor_data: str):
         raise HTTPException(status_code=500, detail=str(e))
     
 # Main Endpoint to combine both steps (search + analysis)
-@app.post("/competition-research")
-async def complete_analysis(request: AnalysisRequest):
+@app.post("/competition_research")
+async def competition_research_analysis(request: AnalysisRequest):
     """
     Step 1: Search for competitors using GPT-4.0
     Step 2: Pass competitor data to GPT-4.01 for deeper analysis
     """
     try:
         # Step 1: Search for competitors based on the URL or project idea
-        competitor_data = await search_for_competitors(request.url, request.project_idea)
+        print("try")
+        competitor_data = await search_for_competitors(request.website, request.problem, request.domain, request.mvp) 
         
         if not competitor_data:
             return {"error": "Failed to gather competitor information."}
@@ -421,7 +423,6 @@ async def complete_analysis(request: AnalysisRequest):
             return {"error": "Failed to analyze competitor data."}
 
         return {
-            "competitor_data": competitor_data,
             "analysis": analysis
         }
 

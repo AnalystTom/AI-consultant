@@ -59,7 +59,7 @@ def display_product_brief(brief: Dict[str, Any]):
         content = brief.get(key, "Not available")
         st.markdown(content)
 
-def display_market_competitor_analysis(analysis: Dict[str, Any]):
+def display_market_analysis(analysis: Dict[str, Any]):
     if "error" in analysis:
         st.error(f"Error in market and competitor analysis: {analysis['error']}")
         if "raw_response" in analysis:
@@ -78,12 +78,18 @@ def display_market_competitor_analysis(analysis: Dict[str, Any]):
         content = analysis.get(key, "Not available")
         st.markdown(content)
 
-# Page configuration
-st.set_page_config(
-    page_title="AI Requirements Analyst",
-    page_icon="🤖",
-    layout="wide"
-)
+def display_competitor_analysis(analysis: Dict[str, Any]):
+    if "error" in analysis:
+        st.error(f"Error in market and competitor analysis: {analysis['error']}")
+        if "raw_response" in analysis:
+            st.code(analysis["raw_response"])
+        return
+
+    # Display competitor analysis section
+    st.markdown("### Competitor Analysis")
+    competitor_analysis = analysis.get("analysis", "No analysis available.")
+    st.markdown(f"```\n{competitor_analysis}\n```")
+
 
 # Initialize session state variables
 if 'requirements' not in st.session_state:
@@ -102,16 +108,26 @@ if 'analysis_result' not in st.session_state:
     st.session_state.analysis_result = None
 if 'product_brief' not in st.session_state:
     st.session_state.product_brief = None
-if 'market_competitor_analysis' not in st.session_state:
-    st.session_state.market_competitor_analysis = None
+if 'market_analysis' not in st.session_state:
+    st.session_state.market_analysis = None
+if 'competitor_analysis' not in st.session_state:
+    st.session_state.competitor_analysis = None
 if 'technical_details' not in st.session_state:
     st.session_state.technical_details = None
 
+# Page configuration
+st.set_page_config(
+    page_title="AI Consultant",
+    page_icon="🤖",
+    layout="wide"
+)
+
 # Create tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "💡 Idea Generation",
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "💡 Idea",
     "📋 Project Brief",
-    "📈 Market & Competitor Analysis",
+    "📈 Market Analysis",
+    "📈 Competitor Analysis",
     "📊 Technical Components",
     "📄 Final Report"
 ])
@@ -226,32 +242,65 @@ with tab2:
 
 # Tab 3: Market & Competitor Analysis
 with tab3:
-    st.header("📈 Market & Competitor Analysis")
+    st.header("📈 Market Analysis")
     if st.session_state.product_brief:
-        if st.button("Generate Market & Competitor Analysis"):
-            with st.spinner("Generating market and competitor analysis..."):
+        if st.button("Generate Market Analysis"):
+            with st.spinner("Generating market analysis..."):
                 try:
                     market_competitor_response = requests.post(
-                        "http://localhost:8000/generate_market_competitor_analysis",
+                        "http://localhost:8000/generate_market_analysis",
                         json={
                             "context": st.session_state.product_brief,
                             "website_overview": st.session_state.analysis_result.get("website_overview", "")
                         },
                         timeout=60
                     )
-                    market_competitor_result = handle_api_response(market_competitor_response)
-                    if market_competitor_result:
-                        st.session_state.market_competitor_analysis = market_competitor_result
+                    market_result = handle_api_response(market_competitor_response)
+                    print(market_result)
+                    if market_result:
+                        st.session_state.market_analysis = market_result
                         st.success("Market and competitor analysis generated successfully!")
                 except Exception as e:
                     st.error(f"An unexpected error occurred: {str(e)}")
-        if st.session_state.market_competitor_analysis:
-            display_market_competitor_analysis(st.session_state.market_competitor_analysis)
+        if st.session_state.market_analysis:
+            display_market_analysis(st.session_state.market_analysis)
+    else:
+        st.info("Please generate the product brief in the Idea Generation tab to see the market and competitor analysis.")
+
+with tab4:
+    st.header("📈 Competitor Analysis")
+    
+    # Check if Product Brief is generated before enabling competitor analysis
+    if st.session_state.product_brief:
+        if st.button("Generate Competitor Analysis"):
+            with st.spinner("Generating competitor analysis..."):
+                data = {
+                    "domain": st.session_state.industry,
+                    "problem": st.session_state.problem_area,
+                    "website": st.session_state.website_url,
+                    "mvp": st.session_state.mvp
+                }
+                try:
+                    competitor_response = requests.post(
+                        "http://localhost:8000/competition_research",
+                        json=data,
+                        timeout=60
+                    )
+                    competitor_result = handle_api_response(competitor_response)
+                    if competitor_result:
+                        st.session_state.competitor_analysis = competitor_result
+                        st.success("Competitor analysis generated successfully!")
+                except Exception as e:
+                    st.error(f"An unexpected error occurred: {str(e)}")
+        
+        # Display competitor analysis results if available
+        if st.session_state.competitor_analysis:
+            display_competitor_analysis(st.session_state.competitor_analysis)
     else:
         st.info("Please generate the product brief in the Idea Generation tab to see the market and competitor analysis.")
 
 # Tab 4: Technical Components
-with tab4:
+with tab5:
     st.header("📊 Technical Components")
     if st.session_state.product_brief:
         if st.button("Generate Technical Implementation Details"):
@@ -299,15 +348,18 @@ with tab4:
 
 
 # Tab 5: Final Report
-with tab5:
+with tab6:
     st.header("📄 Final Report")
     if st.session_state.product_brief:
         st.markdown("## Complete Project Report")
         st.markdown("### Project Brief")
         display_product_brief(st.session_state.product_brief)
-        if st.session_state.market_competitor_analysis:
-            st.markdown("### Market & Competitor Analysis")
-            display_market_competitor_analysis(st.session_state.market_competitor_analysis)
+        if st.session_state.market_analysis:
+            st.markdown("### Market Analysis")
+            display_market_analysis(st.session_state.market_analysis)
+        if st.session_state.competitor_analysis:
+            st.markdown("### Market Analysis")
+            display_competitor_analysis(st.session_state.competitor_analysis)
         if st.session_state.technical_details:
             st.markdown("### Technical Implementation Details")
             st.markdown(st.session_state.technical_details.get('technical_details', 'Not available'))
@@ -383,13 +435,15 @@ with st.sidebar:
     st.subheader("Project Progress: ")
     st.subheader("1. Fill the info: " + ("✅" if all([st.session_state.project_idea.strip(), st.session_state.industry.strip(), st.session_state.problem_area.strip()]) else "⏳"))
     st.subheader("2. View project brief: " + ("✅" if st.session_state.product_brief else "⏳"))
-    st.subheader("3. Generate market & competitor analysis: " + ("✅" if st.session_state.market_competitor_analysis else "⏳"))
-    st.subheader("4. View technical components: " + ("✅" if st.session_state.technical_details else "⏳"))
+    st.subheader("3. Generate market analysis: " + ("✅" if st.session_state.market_analysis else "⏳"))
+    st.subheader("4. Generate competitor analysis: " + ("✅" if st.session_state.competitor_analysis else "⏳"))
+    st.subheader("5. View technical components: " + ("✅" if st.session_state.technical_details else "⏳"))
     progress = st.progress(0)
     completed_sections = sum([
         bool(st.session_state.project_idea.strip()),
         bool(st.session_state.product_brief),
-        bool(st.session_state.market_competitor_analysis),
+        bool(st.session_state.market_analysis),
+        bool(st.session_state.competitor_analysis),
         bool(st.session_state.technical_details)
     ])
-    progress.progress(completed_sections / 4)
+    progress.progress(completed_sections / 5)

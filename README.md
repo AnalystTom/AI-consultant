@@ -1,6 +1,8 @@
-# MVP Generator for your Ideas - Project Setup
+# AI Consult for your Ideas - Project Setup
 
-This guide will help you run the Streamlit frontend and FastAPI backend for the **MVP Generator** tool. This project allows users to input information about their business needs and generates relevant AI solutions, feasibility assessments, and reports.
+![Logo](./assets/AI_consult_logo.png)
+
+This guide will help you run the Streamlit frontend and FastAPI backend for the **AI Consult** tool. This project allows users to input information about their business needs and generates relevant AI solutions, feasibility assessments, and reports.
 
 ## Prerequisites
 
@@ -20,13 +22,13 @@ First, create and activate a virtual environment to isolate your project's depen
 
 ```bash
 # Create a virtual environment
-python -m venv env
+python -m venv .venv
 
 # Activate the virtual environment (Windows)
 .env\Scripts\activate
 
 # Activate the virtual environment (Linux/macOS)
-source env/bin/activate
+source .venv/bin/activate
 ```
 
 ## Step 2: Install Dependencies
@@ -61,9 +63,6 @@ Ensure that your backend is set up correctly. The backend should handle the `/an
 To start the FastAPI backend, run the following command
 
 ```bash
-uvicorn backend:idea_analysis --host 0.0.0.0 --port 8000 --reload
-
-This has worked for me:
 uvicorn backend.idea_analysis:app --host 0.0.0.0 --port 8000 --reload 
 ```
 
@@ -80,7 +79,7 @@ This will start a local server, and Streamlit should automatically open the appl
 
 ## Summary
 
-By following these steps, you should have a working **MVP Generator** tool that allows you to generate AI-driven ideas, assess feasibility, and compile reports for potential AI projects. Make sure both your FastAPI and Streamlit servers are running concurrently for full functionality.
+By following these steps, you should have a working **AI Consult** tool that allows you to generate AI-driven ideas, assess feasibility, and compile reports for potential AI projects. Make sure both your FastAPI and Streamlit servers are running concurrently for full functionality.
 
 If you encounter any problems, check your logs in the terminal for both FastAPI and Streamlit for error messages that can help debug issues.
 

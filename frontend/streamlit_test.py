@@ -9,14 +9,6 @@ import os
 from pathlib import Path
 from PIL import Image
 from streamlit_mermaid import st_mermaid  # Ensure this is installed: pip install streamlit-mermaid
-from utils import render_svg
-from openai import OpenAI
-from icon_generator import create_icon
-
-# Initialize OpenAI client
-base_url = "https://api.aimlapi.com"
-api_key = st.secrets["api_key"]
-client = OpenAI(api_key=api_key, base_url=base_url)
 
 # Helper functions
 def handle_api_response(response: requests.Response) -> Dict[str, Any]:
@@ -116,13 +108,12 @@ if 'technical_details' not in st.session_state:
     st.session_state.technical_details = None
 
 # Create tabs
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "💡 Idea Generation",
     "📋 Project Brief",
     "📈 Market & Competitor Analysis",
     "📊 Technical Components",
-    "📄 Final Report",
-    "👀 Icon for Project"
+    "📄 Final Report"
 ])
 
 # Tab 1: Idea Generation
@@ -306,6 +297,7 @@ with tab4:
         st.info("Please generate the product brief in the Idea Generation tab to see the technical components.")
 
 
+
 # Tab 5: Final Report
 with tab5:
     st.header("📄 Final Report")
@@ -371,15 +363,6 @@ with tab5:
     else:
         st.info("Please complete the previous steps to generate the final report.")
 
-with tab6:
-    st.header("👀 Icon for Project")
-    if project_name := st.session_state.requirements.get('project_name'):
-        icon = create_icon(project_name=project_name, client=client)
-        st.session_state.icon = icon
-        render_svg(icon, width=25)
-    else:
-        st.info("Looks like your project is really diffcult. Please hire a *real* human for the job 😛")
-
 # Sidebar for navigation and settings
 with st.sidebar:
     current_file = Path(__file__)
@@ -387,9 +370,7 @@ with st.sidebar:
     logo_path = project_root / 'assets' / 'AI_consult_logo.png'
     st.markdown('<div class="logo-container">', unsafe_allow_html=True)
     try:
-        if hasattr(st.session_state, "icon"):
-            render_svg(st.session_state.icon)
-        elif logo_path.exists():
+        if logo_path.exists():
             logo = Image.open(logo_path)
             st.image(logo, width=200)
         else:

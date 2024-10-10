@@ -1,0 +1,22 @@
+services:
+  fastapi:
+    build:
+      context: ./backend
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+
+  streamlit:
+    build:
+      context: ./frontend
+    container_name: streamlit_app
+    ports:
+      - "8501:8501"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

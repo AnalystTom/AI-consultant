@@ -232,10 +232,10 @@ with tab3:
             with st.spinner("Generating market and competitor analysis..."):
                 try:
                     market_competitor_response = requests.post(
-                        "http://localhost:8000/competition-research",
+                        "http://localhost:8000/generate_market_competitor_analysis",
                         json={
-                            "project_idea": st.session_state.product_brief,
-                            "url": st.session_state.analysis_result.get("website_overview", "")
+                            "context": st.session_state.product_brief,
+                            "website_overview": st.session_state.analysis_result.get("website_overview", "")
                         },
                         timeout=60
                     )

@@ -70,7 +70,7 @@ async def generate_product_brief(request: ProductBriefRequest):
         """
 
         response = client.chat.completions.create(
-            model="o1-mini",
+            model="gpt-4",
             messages=[
                 {"role": "user", "content": user_prompt},
             ],
@@ -306,9 +306,10 @@ async def complete_analysis(request: AnalysisRequest):
 
 ### aginerd code starts form here ###
 # Define the AnalysisRequest model
-class AnalysisRequest:
-    url: str = None  # URL is optional
-    project_idea: str  # Project idea is mandatory
+
+
+
+
 
 # Step 1: Search for competitors based on URL or project idea using GPT-4.0 (with browsing)
 async def search_for_competitors(url: str, project_idea: str):
@@ -342,7 +343,7 @@ async def search_for_competitors(url: str, project_idea: str):
         
         # Use GPT-4.0 with browsing to search for competitors
         response = client.chat.completions.create(
-            model="chatgpt-4o-latest",  # The version that has browsing capability
+            model="gpt-4",  # The version that has browsing capability
             messages=[
                 {"role": "user", "content": user_prompt},
             ],
@@ -382,7 +383,7 @@ async def analyze_competitor_products(competitor_data: str):
 
         # Use GPT-4.01 for deeper analysis
         response = client.chat.completions.create(
-            model="o1-mini",  # The reasoning model for deeper analysis
+            model="gpt-4",  # The reasoning model for deeper analysis
             messages=[
                 {"role": "user", "content": user_prompt},
             ],

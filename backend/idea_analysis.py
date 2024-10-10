@@ -306,24 +306,43 @@ async def complete_analysis(request: AnalysisRequest):
 
 ### aginerd code starts form here ###
 # Define the AnalysisRequest model
-class AnalysisRequest(BaseModel):
-    website: str
+class AnalysisRequest:
+    url: str = None  # URL is optional
+    project_idea: str  # Project idea is mandatory
 
-# Step 1: Use GPT-4.0 with browsing to gather competitor information
-async def browse_for_competitors(website: str):
+# Step 1: Search for competitors based on URL or project idea using GPT-4.0 (with browsing)
+async def search_for_competitors(url: str, project_idea: str):
     try:
-        user_prompt = f"""
-        - Website: {website}
-        Task:
-        1. Search for competitor websites using internet search.
-        2. Collect product and business details of competitors relevant to {website}.
+        if url:
+            # Focus search on competitors of the given website
+            user_prompt = f"""
+            - Website: {url}
+            Task:
+            1. Search for competitor websites related to the project idea and {url}.
+            2. Provide a list of the top 5 competitors and their products.
+            
+            Output:
+            1. Competitor Name A
+            1.1 Product A
+            1.2 Description of Product A
+            """
+        else:
+            # Use project idea alone to find top competitors
+            user_prompt = f"""
+            - Project Idea: {project_idea}
+            Task:
+            1. Search the web for top 5 competitors in the field of {project_idea}.
+            2. Provide a list of the top 5 competitors and their products.
+            
+            Output:
+            1. Competitor Name A
+            1.1 Product A
+            1.2 Description of Product A
+            """
         
-        Output: Provide a list of competitor names, products, and brief descriptions.
-        """
-        
-        # Use GPT-4.0 with browsing for searching competitors
+        # Use GPT-4.0 with browsing to search for competitors
         response = client.chat.completions.create(
-            model="gpt-4",  # The version that has browsing capability
+            model="chatgpt-4o-latest",  # The version that has browsing capability
             messages=[
                 {"role": "user", "content": user_prompt},
             ],
@@ -333,7 +352,7 @@ async def browse_for_competitors(website: str):
 
         if response and response.choices:
             search_results = response.choices[0].message['content']
-            return search_results  # Raw data for further analysis
+            return search_results  # Raw competitor data for further analysis
 
         return None
     except Exception as e:
@@ -341,30 +360,29 @@ async def browse_for_competitors(website: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Step 2: Use GPT-4.01 to analyze competitor data and suggest improvements
-async def analyze_competitor_data(competitor_data: str):
+# Step 2: Analyze competitor products for gaps (using GPT-4.01 for reasoning)
+async def analyze_competitor_products(competitor_data: str):
     try:
         user_prompt = f"""
         Task:
         1. Analyze the following competitor data.
-        2. Extract product information, key features, and any potential improvements.
-        3. Identify gaps in the market based on the given data.
-        
+        2. For each competitor, provide one point where their product is lacking.
+        3. Suggest how the user can fill the gap in their own product.
+
         Competitor Data:
         {competitor_data}
 
         Output:
         1. Competitor Name A
         1.1 Product A
-        1.2 Features
-        1.3 Potential improvements
-        1.4 Market Gaps
+        1.2 Description of Product A
+        1.3 Feature(s) that Product A lacks
+        1.4 Suggestion for how the user can implement this missing feature in their product
         """
 
-        # Use GPT-4.01 to analyze the competitor data
-        
+        # Use GPT-4.01 for deeper analysis
         response = client.chat.completions.create(
-            model="gpt-4-turbo-16k",  # The reasoning model for structured analysis
+            model="o1-mini",  # The reasoning model for deeper analysis
             messages=[
                 {"role": "user", "content": user_prompt},
             ],
@@ -380,24 +398,23 @@ async def analyze_competitor_data(competitor_data: str):
     except Exception as e:
         logging.error(f"Error in analysis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-# Main Endpoint that coordinates both steps
+    
+# Main Endpoint to combine both steps (search + analysis)
 @app.post("/competition-research")
 async def complete_analysis(request: AnalysisRequest):
     """
-    Step 1: Perform internet search to find competitors and products using GPT-4.0
-    Step 2: Pass the search results to GPT-4.01 for structured analysis
+    Step 1: Search for competitors using GPT-4.0
+    Step 2: Pass competitor data to GPT-4.01 for deeper analysis
     """
     try:
-        # Step 1: Use GPT-4.0 with browsing to search for competitors
-        competitor_data = await browse_for_competitors(request.website)
+        # Step 1: Search for competitors based on the URL or project idea
+        competitor_data = await search_for_competitors(request.url, request.project_idea)
         
         if not competitor_data:
             return {"error": "Failed to gather competitor information."}
 
-        # Step 2: Pass the gathered data to GPT-4.01 for deeper analysis
-        analysis = await analyze_competitor_data(competitor_data)
+        # Step 2: Analyze the competitor data to find gaps and suggest improvements
+        analysis = await analyze_competitor_products(competitor_data)
 
         if not analysis:
             return {"error": "Failed to analyze competitor data."}
@@ -410,8 +427,14 @@ async def complete_analysis(request: AnalysisRequest):
     except Exception as e:
         logging.error(f"Error in complete analysis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 ### aginerd code ends here ###
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+#{
+#    "url": "https://example.com",
+#    "project_idea": "An online learning platform for coding"
+#}

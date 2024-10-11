@@ -193,7 +193,7 @@ with tab1:
                     }
                     try:
                         response = requests.post(
-                            "http://localhost:8000/complete_analysis", 
+                            "https://celebrated-analysis-production.up.railway.app/complete_analysis", 
                             json=data,
                             timeout=60
                         )
@@ -248,7 +248,7 @@ with tab3:
             with st.spinner("Generating market analysis..."):
                 try:
                     market_competitor_response = requests.post(
-                        "http://localhost:8000/generate_market_analysis",
+                        "https://celebrated-analysis-production.up.railway.app/generate_market_analysis",
                         json={
                             "context": st.session_state.product_brief,
                             "website_overview": st.session_state.analysis_result.get("website_overview", "")
@@ -282,7 +282,7 @@ with tab4:
                 }
                 try:
                     competitor_response = requests.post(
-                        "http://localhost:8000/competition_research",
+                        "https://celebrated-analysis-production.up.railway.app/competition_research",
                         json=data,
                         timeout=60
                     )
@@ -307,7 +307,7 @@ with tab5:
             with st.spinner("Generating technical implementation details..."):
                 try:
                     tech_stack_response = requests.post(
-                        "http://localhost:8000/generate_tech_stack",
+                        "https://celebrated-analysis-production.up.railway.app/generate_tech_stack",
                         json={
                             "context": st.session_state.product_brief,
                             "website_overview": st.session_state.analysis_result.get("website_overview", "")

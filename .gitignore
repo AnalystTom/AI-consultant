@@ -52,9 +52,9 @@ pip-delete-this-directory.txt
 
 # Virtual environments
 venv/
-ENV/
-env/
-env.bak/
+
+
+
 venv.bak/
 
 # Django stuff:
@@ -87,16 +87,14 @@ dmypy.json
 .ipynb_checkpoints
 
 # Environments
-.env
+
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
-.env.local
-.env.*.local
-.pyenv
+
 # PyCharm
 .idea/
 *.iml
@@ -138,10 +136,7 @@ bower_components/
 
 # Miscellaneous
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+
 
 # Yarn
 yarn.lock
@@ -170,9 +165,6 @@ yarn.lock
 /frontend/build/
 
 # Ignore specific config files (if they contain sensitive data)
-/frontend/.env.local
-/backend/.env.local
-/backend/.flaskenv
 
 
 #virtual env
